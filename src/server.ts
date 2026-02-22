@@ -216,4 +216,23 @@ app.get('/historico', async (req: Request, res: Response) => {
     console.log("ERRO NO HISTÓRICO:", error);
     res.status(500).json({ erro: 'Erro ao buscar histórico.' });
   }
+
+  // função para listar todos os colaboradores cadastrados na oficina
+app.get('/usuarios', async (req, res) => {
+    try {
+        // script para puxar dados de todos os usuarios e organizar em ordem alfabética
+        const usuarios = await prisma.usuario.findMany({
+            orderBy: {
+                nome: 'asc'
+            }
+        });
+        
+        // script para devolver a lista pronta para o front-end
+        return res.json(usuarios);
+    } catch (error) {
+        // script para avisar caso dê algum erro no banco de dados
+        console.error("Erro ao buscar usuários:", error);
+        return res.status(500).json({ erro: "Erro ao buscar os colaboradores." });
+    }
+});
 });

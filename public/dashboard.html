@@ -112,7 +112,7 @@
         </div>
         <nav class="sidebar-menu">
             <div class="menu-item active" onclick="mudarAba('dashboard', this)" title="Home">
-                <i class="ph ph-squares-four"></i> <span class="menu-text">Home (Resumo)</span>
+                <i class="ph ph-squares-four"></i> <span class="menu-text">Home </span>
             </div>
             
             <div class="menu-divider"></div>
@@ -138,9 +138,15 @@
             <div class="menu-item" onclick="mudarAba('add-supervisor', this)" title="Novo Supervisor">
                 <i class="ph ph-user-gear"></i> <span class="menu-text">Novo Supervisor</span>
             </div>
+
+             <div class="menu-divider"></div>
+
+             <div class="menu-item" onclick="mudarAba('view-equipe', this)" title="Equipe">
+            <i class="ph ph-users"></i> <span class="menu-text">Equipe</span>
+            </div>
             
             <a href="index.html" class="menu-item link-tablet" title="Tela do Tablet">
-                <i class="ph ph-device-tablet-camera"></i> <span class="menu-text">Tela do Tablet</span>
+                <i class="ph ph-device-tablet-camera"></i> <span class="menu-text">Tela de Gestão</span>
             </a>
         </nav>
     </aside>
@@ -235,7 +241,7 @@
             <div class="form-box">
                 <div class="form-group"><label>Nome Completo:</label><input type="text" id="novoMecNome" placeholder="Ex: Roberto Alves"></div>
                 <div class="form-group"><label>Sigla de Acesso (3 letras):</label><input type="text" id="novoMecSigla" placeholder="Ex: ROB" maxlength="5"></div>
-                <button onclick="salvarUsuario('novoMecNome', 'novoMecSigla', 'msgMecanico')">Cadastrar Mecânico</button>
+                <button onclick="salvarUsuario('novoMecNome', 'novoMecSigla', 'msgMecanico', 'MECANICO')">Cadastrar Mecânico</button>
                 <div id="msgMecanico" class="msg"></div>
             </div>
         </section>
@@ -245,10 +251,30 @@
             <div class="form-box">
                 <div class="form-group"><label>Nome Completo do Supervisor:</label><input type="text" id="novoSupNome" placeholder="Ex: Carlos Silva"></div>
                 <div class="form-group"><label>Sigla de Acesso (Autorização):</label><input type="text" id="novoSupSigla" placeholder="Ex: SUP" maxlength="5"></div>
-                <button onclick="salvarUsuario('novoSupNome', 'novoSupSigla', 'msgSupervisor')" style="background-color: var(--cor-texto-escuro);">Cadastrar Supervisor</button>
+                <button onclick="salvarUsuario('novoSupNome', 'novoSupSigla', 'msgSupervisor', 'SUPERVISOR')" style="background-color: var(--cor-texto-escuro);">Cadastrar Supervisor</button>
                 <div id="msgSupervisor" class="msg"></div>
             </div>
         </section>
+
+        <section id="view-equipe" class="section">
+            <h2><i class="ph ph-users" style="color: var(--cor-primaria);"></i> Colaboradores (Equipe)</h2>
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome do Colaborador</th>
+                            <th>Sigla</th>
+                            <th>Cargo / Papel</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbEquipe"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="add-ferramenta" class="section">
+
 
     </main>
 
@@ -312,7 +338,7 @@
                     }
                 });
 
-// 3. Monta o Histórico
+                // 3. Monta o Histórico
                 let htmlHistorico = '';
                 
                 if (Array.isArray(historico)) {
@@ -424,6 +450,52 @@
             } catch (error) { mostrarMensagem(msgBox, "erro", "Erro de conexão."); }
         }
 
+
+        // função para carregar a lista de colaboradores e mostrar no dashboard
+        async function carregarColaboradores() {
+            try {
+                // script para puxar dados dos colaboradores do back-end
+                const res = await fetch('http://localhost:3333/usuarios');
+                const colaboradores = await res.json();
+                
+                // script para identificar onde a tabela será desenhada
+                const tbody = document.getElementById('tbEquipe');
+                let html = '';
+                
+                if (Array.isArray(colaboradores) && colaboradores.length > 0) {
+                    colaboradores.forEach(c => {
+                        // script para definir a cor e o texto do status do colaborador
+                        const statusTexto = c.ativo ? 'Ativo' : 'Inativo';
+                        const corStatus = c.ativo ? 'var(--cor-verde)' : 'var(--cor-vermelho)';
+                        
+                        // script para formatar o nome do cargo (MECANICO ou SUPERVISOR)
+                        const cargoFormatado = c.papel === 'SUPERVISOR' ? '👨‍💼 Supervisor' : '🔧 Mecânico';
+
+                        // script para montar a linha da tabela para cada pessoa
+                        html += `
+                            <tr>
+                                <td><strong>${c.nome}</strong></td>
+                                <td><span class="badge cinza">${c.sigla}</span></td>
+                                <td>${cargoFormatado}</td>
+                                <td><span style="color: ${corStatus}; font-weight: bold;">${statusTexto}</span></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    // script para injetar o HTML gerado dentro da tabela
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px;'>Nenhum colaborador encontrado.</td></tr>";
+                }
+            } catch (error) {
+                console.error("Erro ao carregar equipe:", error);
+                document.getElementById('tbEquipe').innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color: red;'>Falha ao conectar com o servidor.</td></tr>";
+            }
+        }
+
+
+ 
+
         // Mensagens animadas
         function mostrarMensagem(elemento, tipo, texto) {
             elemento.className = `msg ${tipo}`; 
@@ -432,7 +504,10 @@
         }
 
         // Faz o carregamento rodar sozinho quando a página abre
-        window.onload = carregarDados;
+        window.onload = () => {
+            carregarDados();
+            carregarColaboradores(); // script para carregar a equipe ao abrir
+        };
     </script>
 </body>
 </html>
