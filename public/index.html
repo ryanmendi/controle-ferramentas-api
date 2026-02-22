@@ -1,309 +1,594 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tablet - Operação da Oficina</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
+
     <style>
-        /* ================= RESET E VARIÁVEIS (Padrão do Sistema) ================= */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        :root {
-            --bg-sidebar: #0f172a; 
-            --bg-sidebar-hover: #1e293b;
-            --cor-primaria: #3b82f6; 
-            --cor-fundo: #f1f5f9;
-            --cor-texto-escuro: #334155;
-            --cor-verde: #10b981;
-            --cor-cinza-escuro: #475569;
+      /* ================= RESET E VARIÁVEIS (Padrão do Sistema) ================= */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      :root {
+        --bg-sidebar: #0f172a;
+        --bg-sidebar-hover: #1e293b;
+        --cor-primaria: #3b82f6;
+        --cor-fundo: #f1f5f9;
+        --cor-texto-escuro: #334155;
+        --cor-verde: #10b981;
+        --cor-cinza-escuro: #475569;
+      }
+
+      body {
+        display: flex;
+        height: 100vh;
+        background-color: var(--cor-fundo);
+        overflow: hidden;
+      }
+
+      /* ================= BARRA LATERAL RETRÁTIL ================= */
+      .sidebar {
+        width: 280px;
+        background-color: var(--bg-sidebar);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease;
+      }
+
+      /* Classe que encolhe a barra lateral */
+      .sidebar.collapsed {
+        width: 80px;
+      }
+
+      .sidebar-header {
+        padding: 25px 20px;
+        font-size: 22px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #1e293b;
+      }
+      .logo-area {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo-area i {
+        font-size: 28px;
+        color: var(--cor-primaria);
+      }
+
+      /* Botão de Toggle (Hamburger) */
+      .btn-toggle {
+        cursor: pointer;
+        font-size: 24px;
+        color: #cbd5e1;
+        transition: 0.2s;
+      }
+      .btn-toggle:hover {
+        color: white;
+      }
+
+      /* Escondendo textos e logo quando recolhido */
+      .sidebar.collapsed .logo-text,
+      .sidebar.collapsed .logo-area i {
+        display: none;
+      }
+      .sidebar.collapsed .sidebar-header {
+        justify-content: center;
+        padding: 25px 0;
+      }
+      .sidebar.collapsed .menu-text {
+        display: none;
+      }
+
+      .sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        flex: 1;
+      }
+
+      .menu-item {
+        padding: 20px 25px;
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+        border-left: 4px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .menu-item i {
+        font-size: 24px;
+        min-width: 24px;
+      }
+      .menu-item:hover,
+      .menu-item.active {
+        background-color: var(--bg-sidebar-hover);
+        color: white;
+        border-left-color: var(--cor-primaria);
+      }
+
+      /* Ajuste do item quando recolhido */
+      .sidebar.collapsed .menu-item {
+        padding: 20px 0;
+        justify-content: center;
+        border-left: none;
+      }
+      .sidebar.collapsed .menu-item:hover,
+      .sidebar.collapsed .menu-item.active {
+        border-left: none;
+        background-color: var(--cor-primaria);
+      }
+
+      .menu-item.link-painel {
+        margin-top: auto;
+        border-top: 1px solid #1e293b;
+        color: var(--cor-primaria);
+        font-weight: bold;
+      }
+      .menu-item.link-painel:hover {
+        background-color: #1e293b;
+        color: white;
+      }
+
+      /* ================= ÁREA PRINCIPAL ================= */
+      .main-content {
+        flex: 1;
+        padding: 40px;
+        overflow-y: auto;
+      }
+      .section {
+        display: none;
+        animation: fadeIn 0.3s;
+      }
+      .section.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-        body { display: flex; height: 100vh; background-color: var(--cor-fundo); overflow: hidden; }
-        
-        /* ================= BARRA LATERAL RETRÁTIL ================= */
-        .sidebar { width: 280px; background-color: var(--bg-sidebar); color: white; display: flex; flex-direction: column; transition: width 0.3s ease; }
-        
-        /* Classe que encolhe a barra lateral */
-        .sidebar.collapsed { width: 80px; }
-        
-        .sidebar-header { padding: 25px 20px; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; }
-        .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-area i { font-size: 28px; color: var(--cor-primaria); }
-        
-        /* Botão de Toggle (Hamburger) */
-        .btn-toggle { cursor: pointer; font-size: 24px; color: #cbd5e1; transition: 0.2s; }
-        .btn-toggle:hover { color: white; }
+      h2 {
+        color: var(--cor-texto-escuro);
+        margin-bottom: 30px;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-        /* Escondendo textos e logo quando recolhido */
-        .sidebar.collapsed .logo-text, 
-        .sidebar.collapsed .logo-area i { display: none; }
-        .sidebar.collapsed .sidebar-header { justify-content: center; padding: 25px 0; }
-        .sidebar.collapsed .menu-text { display: none; }
+      /* ================= LAYOUT GRID PARA RETIRADA ================= */
+      .grid-operacao {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
 
-        .sidebar-menu { display: flex; flex-direction: column; padding: 20px 0; flex: 1; }
-        
-        .menu-item { padding: 20px 25px; color: #cbd5e1; text-decoration: none; font-size: 16px; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; display: flex; align-items: center; gap: 12px; font-weight: 500; white-space: nowrap; }
-        .menu-item i { font-size: 24px; min-width: 24px; }
-        .menu-item:hover, .menu-item.active { background-color: var(--bg-sidebar-hover); color: white; border-left-color: var(--cor-primaria); }
-        
-        /* Ajuste do item quando recolhido */
-        .sidebar.collapsed .menu-item { padding: 20px 0; justify-content: center; border-left: none; }
-        .sidebar.collapsed .menu-item:hover, .sidebar.collapsed .menu-item.active { border-left: none; background-color: var(--cor-primaria); }
-        
-        .menu-item.link-painel { margin-top: auto; border-top: 1px solid #1e293b; color: var(--cor-primaria); font-weight: bold; }
-        .menu-item.link-painel:hover { background-color: #1e293b; color: white; }
+      /* ================= CAIXAS DE FORMULÁRIO E TABELA ================= */
+      .box {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .box h3 {
+        color: var(--cor-texto-escuro);
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--cor-fundo);
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-        /* ================= ÁREA PRINCIPAL ================= */
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
-        .section { display: none; animation: fadeIn 0.3s; }
-        .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        h2 { color: var(--cor-texto-escuro); margin-bottom: 30px; font-size: 28px; display: flex; align-items: center; gap: 10px; }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--cor-texto-escuro);
+        margin-bottom: 8px;
+      }
+      input {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 16px;
+        text-transform: uppercase;
+        transition: 0.2s;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--cor-primaria);
+      }
 
-        /* ================= LAYOUT GRID PARA RETIRADA ================= */
-        .grid-operacao { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+      button {
+        background-color: var(--cor-primaria);
+        color: white;
+        border: none;
+        padding: 16px 20px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        transition: 0.2s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+      }
+      button:hover {
+        background-color: #2563eb;
+      }
 
-        /* ================= CAIXAS DE FORMULÁRIO E TABELA ================= */
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .box h3 { color: var(--cor-texto-escuro); margin-bottom: 20px; border-bottom: 2px solid var(--cor-fundo); padding-bottom: 10px; display: flex; align-items: center; gap: 8px;}
-        
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 15px; font-weight: 600; color: var(--cor-texto-escuro); margin-bottom: 8px; }
-        input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 16px; text-transform: uppercase; transition: 0.2s; }
-        input:focus { outline: none; border-color: var(--cor-primaria); }
-        
-        button { background-color: var(--cor-primaria); color: white; border: none; padding: 16px 20px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        button:hover { background-color: #2563eb; }
-        
-        button.btn-devolver { background-color: var(--cor-cinza-escuro); }
-        button.btn-devolver:hover { background-color: #334155; }
+      button.btn-devolver {
+        background-color: var(--cor-cinza-escuro);
+      }
+      button.btn-devolver:hover {
+        background-color: #334155;
+      }
 
-        /* ================= TABELA DE DISPONÍVEIS ================= */
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
-        th { color: #64748b; font-weight: 600; background-color: #f8fafc; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; background-color: var(--cor-verde); }
+      /* ================= TABELA DE DISPONÍVEIS ================= */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      th,
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 15px;
+      }
+      th {
+        color: #64748b;
+        font-weight: 600;
+        background-color: #f8fafc;
+      }
+      .badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+        background-color: var(--cor-verde);
+      }
 
-        .msg { padding: 15px; border-radius: 8px; margin-top: 20px; font-weight: bold; display: none; text-align: center; font-size: 16px; }
-        .msg.sucesso { background-color: #d1fae5; color: #065f46; display: block; }
-        .msg.erro { background-color: #fee2e2; color: #991b1b; display: block; }
+      .msg {
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-weight: bold;
+        display: none;
+        text-align: center;
+        font-size: 16px;
+      }
+      .msg.sucesso {
+        background-color: #d1fae5;
+        color: #065f46;
+        display: block;
+      }
+      .msg.erro {
+        background-color: #fee2e2;
+        color: #991b1b;
+        display: block;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-area">
-                <i class="ph ph-device-tablet"></i>
-                <span class="logo-text">Balcão</span>
-            </div>
-            <i class="ph ph-list btn-toggle" onclick="toggleSidebar()" title="Recolher/Expandir Menu"></i>
+      <div class="sidebar-header">
+        <div class="logo-area">
+          <i class="ph ph-device-tablet"></i>
+          <span class="logo-text">Balcão</span>
         </div>
-        <nav class="sidebar-menu">
-            <div class="menu-item active" onclick="mudarAba('sec-retirar', this)" title="Retirar Ferramenta">
-                <i class="ph ph-hand-grabbing"></i> <span class="menu-text">Retirar Ferramenta</span>
-            </div>
-            <div class="menu-item" onclick="mudarAba('sec-devolver', this)" title="Devolver Ferramenta">
-                <i class="ph ph-arrow-u-down-left"></i> <span class="menu-text">Devolver Ferramenta</span>
-            </div>
-            
-            <a href="dashboard.html" class="menu-item link-painel" title="Ir para o Dashboard">
-                <i class="ph ph-chart-line-up"></i> <span class="menu-text">Ir para o Dashboard</span>
-            </a>
-        </nav>
+        <i
+          class="ph ph-list btn-toggle"
+          onclick="toggleSidebar()"
+          title="Recolher/Expandir Menu"
+        ></i>
+      </div>
+      <nav class="sidebar-menu">
+        <div
+          class="menu-item active"
+          onclick="mudarAba('sec-retirar', this)"
+          title="Retirar Ferramenta"
+        >
+          <i class="ph ph-hand-grabbing"></i>
+          <span class="menu-text">Retirar Ferramenta</span>
+        </div>
+        <div
+          class="menu-item"
+          onclick="mudarAba('sec-devolver', this)"
+          title="Devolver Ferramenta"
+        >
+          <i class="ph ph-arrow-u-down-left"></i>
+          <span class="menu-text">Devolver Ferramenta</span>
+        </div>
+
+        <a
+          href="dashboard.html"
+          class="menu-item link-painel"
+          title="Ir para o Dashboard"
+        >
+          <i class="ph ph-chart-line-up"></i>
+          <span class="menu-text">Ir para o Dashboard</span>
+        </a>
+      </nav>
     </aside>
 
     <main class="main-content">
-        
-        <section id="sec-retirar" class="section active">
-            <h2><i class="ph ph-hand-grabbing"></i> Liberação de Ferramenta</h2>
-            
-            <div class="grid-operacao">
-                <div class="box">
-                    <h3><i class="ph ph-identification-card"></i> Dados da Retirada</h3>
-                    <div class="form-group">
-                        <label>Sua Sigla (Mecânico):</label>
-                        <input type="text" id="siglaMecanico" placeholder="Ex: AXA" maxlength="5">
-                    </div>
-                    <div class="form-group">
-                        <label>Sigla do Supervisor (Autorização):</label>
-                        <input type="text" id="siglaSupervisor" placeholder="Ex: SUP" maxlength="5">
-                    </div>
-                    <div class="form-group">
-                        <label>Código da Ferramenta:</label>
-                        <input type="text" id="codigoFerramenta" placeholder="Ex: FUR-001">
-                    </div>
-                    <button onclick="solicitarEmprestimo()"><i class="ph ph-check-circle"></i> LIBERAR FERRAMENTA</button>
-                    <div id="msgRetirada" class="msg"></div>
-                </div>
+      <section id="sec-retirar" class="section active">
+        <h2><i class="ph ph-hand-grabbing"></i> Liberação de Ferramenta</h2>
 
-                <div class="box">
-                    <h3><i class="ph ph-list-checks"></i> Prontas para Uso</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Ferramenta</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbDisponiveis">
-                            </tbody>
-                    </table>
-                </div>
+        <div class="grid-operacao">
+          <div class="box">
+            <h3><i class="ph ph-identification-card"></i> Dados da Retirada</h3>
+            <div class="form-group">
+              <label>Sua Sigla (Mecânico):</label>
+              <input
+                type="text"
+                id="siglaMecanico"
+                placeholder="Ex: AXA"
+                maxlength="5"
+              />
             </div>
-        </section>
-
-        <section id="sec-devolver" class="section">
-            <h2><i class="ph ph-arrow-u-down-left"></i> Devolução ao Painel</h2>
-            
-            <div class="box" style="max-width: 500px;">
-                <h3><i class="ph ph-toolbox"></i> Dados da Devolução</h3>
-                
-                <div class="form-group">
-                    <label>Sua Sigla (Quem está devolvendo):</label>
-                    <input type="text" id="siglaMecanicoDev" placeholder="Ex: AXA" maxlength="5">
-                </div>
-                <div class="form-group">
-                    <label>Sigla do Supervisor (Quem está recebendo):</label>
-                    <input type="text" id="siglaSupervisorDev" placeholder="Ex: SUP" maxlength="5">
-                </div>
-                <div class="form-group">
-                    <label>Código da Ferramenta:</label>
-                    <input type="text" id="codigoDevolucao" placeholder="Ex: FUR-001">
-                </div>
-
-                <button class="btn-devolver" onclick="devolverFerramenta()"><i class="ph ph-arrow-u-down-left"></i> CONFIRMAR DEVOLUÇÃO</button>
-                <div id="msgDevolucao" class="msg"></div>
+            <div class="form-group">
+              <label>Sigla do Supervisor (Autorização):</label>
+              <input
+                type="text"
+                id="siglaSupervisor"
+                placeholder="Ex: SUP"
+                maxlength="5"
+              />
             </div>
-        </section>
+            <div class="form-group">
+              <label>Código da Ferramenta:</label>
+              <input
+                type="text"
+                id="codigoFerramenta"
+                placeholder="Ex: FUR-001"
+              />
+            </div>
+            <button onclick="solicitarEmprestimo()">
+              <i class="ph ph-check-circle"></i> LIBERAR FERRAMENTA
+            </button>
+            <div id="msgRetirada" class="msg"></div>
+          </div>
 
+          <div class="box">
+            <h3><i class="ph ph-list-checks"></i> Prontas para Uso</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Ferramenta</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbDisponiveis"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="sec-devolver" class="section">
+        <h2><i class="ph ph-arrow-u-down-left"></i> Devolução ao Painel</h2>
+
+        <div class="box" style="max-width: 500px">
+          <h3><i class="ph ph-toolbox"></i> Dados da Devolução</h3>
+
+          <div class="form-group">
+            <label>Sua Sigla (Quem está devolvendo):</label>
+            <input
+              type="text"
+              id="siglaMecanicoDev"
+              placeholder="Ex: AXA"
+              maxlength="5"
+            />
+          </div>
+          <div class="form-group">
+            <label>Sigla do Supervisor (Quem está recebendo):</label>
+            <input
+              type="text"
+              id="siglaSupervisorDev"
+              placeholder="Ex: SUP"
+              maxlength="5"
+            />
+          </div>
+          <div class="form-group">
+            <label>Código da Ferramenta:</label>
+            <input type="text" id="codigoDevolucao" placeholder="Ex: FUR-001" />
+          </div>
+
+          <button class="btn-devolver" onclick="devolverFerramenta()">
+            <i class="ph ph-arrow-u-down-left"></i> CONFIRMAR DEVOLUÇÃO
+          </button>
+          <div id="msgDevolucao" class="msg"></div>
+        </div>
+      </section>
     </main>
 
     <script>
-        // Função para recolher/expandir a barra lateral
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('collapsed');
-        }
+      // Função para recolher/expandir a barra lateral
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("collapsed");
+      }
 
-        // Troca as abas da tela do tablet
-        function mudarAba(idAba, elementoMenu) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            document.getElementById(idAba).classList.add('active');
-            elementoMenu.classList.add('active');
-            
-            // Limpa mensagens de erro/sucesso ao trocar de aba
-            document.getElementById('msgRetirada').className = "msg";
-            document.getElementById('msgDevolucao').className = "msg";
-        }
+      // Troca as abas da tela do tablet
+      function mudarAba(idAba, elementoMenu) {
+        document
+          .querySelectorAll(".section")
+          .forEach((sec) => sec.classList.remove("active"));
+        document
+          .querySelectorAll(".menu-item")
+          .forEach((item) => item.classList.remove("active"));
+        document.getElementById(idAba).classList.add("active");
+        elementoMenu.classList.add("active");
 
-        // Busca na API APENAS as ferramentas livres para preencher a tabela lateral
-        async function carregarDisponiveis() {
-            try {
-                const resposta = await fetch('http://localhost:3333/ferramentas');
-                const ferramentas = await resposta.json();
-                
-                let html = '';
-                ferramentas.forEach(f => {
-                    if (f.status === 'DISPONIVEL') {
-                        html += `
+        // Limpa mensagens de erro/sucesso ao trocar de aba
+        document.getElementById("msgRetirada").className = "msg";
+        document.getElementById("msgDevolucao").className = "msg";
+      }
+
+      // Busca na API APENAS as ferramentas livres para preencher a tabela lateral
+      async function carregarDisponiveis() {
+        try {
+          const resposta = await fetch("http://localhost:3333/ferramentas");
+          const ferramentas = await resposta.json();
+
+          let html = "";
+          ferramentas.forEach((f) => {
+            if (f.status === "DISPONIVEL") {
+              html += `
                             <tr>
                                 <td><strong>${f.codigo_identificacao}</strong></td>
                                 <td>${f.nome}</td>
                                 <td><span class="badge">Livre</span></td>
                             </tr>
                         `;
-                    }
-                });
-
-                document.getElementById('tbDisponiveis').innerHTML = html || "<tr><td colspan='3'>Nenhuma ferramenta livre no momento.</td></tr>";
-            } catch (error) {
-                console.error("Erro ao buscar ferramentas:", error);
             }
+          });
+
+          document.getElementById("tbDisponiveis").innerHTML =
+            html ||
+            "<tr><td colspan='3'>Nenhuma ferramenta livre no momento.</td></tr>";
+        } catch (error) {
+          console.error("Erro ao buscar ferramentas:", error);
+        }
+      }
+
+      // Função de Empréstimo (Retirada)
+      // FUNÇÃO DE RETIRADA (Agora lê corretamente o JSON do seu Prisma)
+      async function solicitarEmprestimo() {
+        const m = document
+          .getElementById("siglaMecanico")
+          .value.toUpperCase()
+          .trim();
+        const s = document
+          .getElementById("siglaSupervisor")
+          .value.toUpperCase()
+          .trim();
+        const f = document
+          .getElementById("codigoFerramenta")
+          .value.toUpperCase()
+          .trim();
+        const msgBox = document.getElementById("msgRetirada"); // Ajuste para a sua caixa de mensagem
+
+        if (!m || !s || !f) {
+          mostrarMensagem(msgBox, "erro", "Preencha todos os campos!");
+          return;
         }
 
-        // Função de Empréstimo (Retirada)
-// FUNÇÃO DE RETIRADA (Agora lê corretamente o JSON do seu Prisma)
-        async function solicitarEmprestimo() {
-            const m = document.getElementById('siglaMecanico').value.toUpperCase().trim();
-            const s = document.getElementById('siglaSupervisor').value.toUpperCase().trim();
-            const f = document.getElementById('codigoFerramenta').value.toUpperCase().trim();
-            const msgBox = document.getElementById('msgRetirada'); // Ajuste para a sua caixa de mensagem
-            
-            if (!m || !s || !f) { mostrarMensagem(msgBox, "erro", "Preencha todos os campos!"); return; }
-            
-            try {
-                const res = await fetch('http://localhost:3333/emprestar', {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ sigla_mecanico: m, sigla_responsavel: s, codigo_ferramenta: f })
-                });
-                
-                const dados = await res.json(); // Agora lê a resposta exata do seu Prisma
-                
-                if (res.ok) { 
-                    mostrarMensagem(msgBox, "sucesso", dados.mensagem); // "Sucesso! Ferramenta liberada."
-                    document.getElementById('siglaMecanico').value = ""; 
-                    document.getElementById('siglaSupervisor').value = ""; 
-                    document.getElementById('codigoFerramenta').value = ""; 
-                    if(typeof carregarDisponiveis === "function") carregarDisponiveis(); 
-                } else { 
-                    mostrarMensagem(msgBox, "erro", dados.erro); // Exibe o erro exato programado no seu Back-end!
-                }
-            } catch (error) { 
-                mostrarMensagem(msgBox, "erro", "Erro de conexão com o servidor."); 
-            }
+        try {
+          const res = await fetch("http://localhost:3333/emprestar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sigla_mecanico: m,
+              sigla_responsavel: s,
+              codigo_ferramenta: f,
+            }),
+          });
+
+          const dados = await res.json(); // Agora lê a resposta exata do seu Prisma
+
+          if (res.ok) {
+            mostrarMensagem(msgBox, "sucesso", dados.mensagem); // "Sucesso! Ferramenta liberada."
+            document.getElementById("siglaMecanico").value = "";
+            document.getElementById("siglaSupervisor").value = "";
+            document.getElementById("codigoFerramenta").value = "";
+            if (typeof carregarDisponiveis === "function")
+              carregarDisponiveis();
+          } else {
+            mostrarMensagem(msgBox, "erro", dados.erro); // Exibe o erro exato programado no seu Back-end!
+          }
+        } catch (error) {
+          mostrarMensagem(msgBox, "erro", "Erro de conexão com o servidor.");
         }
-        // Função de Devolução (Com Rastreabilidade Total)
-        async function devolverFerramenta() {
-            const mecanico = document.getElementById('siglaMecanicoDev').value.toUpperCase().trim();
-            const supervisor = document.getElementById('siglaSupervisorDev').value.toUpperCase().trim();
-            const ferramenta = document.getElementById('codigoDevolucao').value.toUpperCase().trim();
-            const msgBox = document.getElementById('msgDevolucao');
+      }
+      // Função de Devolução (Com Rastreabilidade Total)
+      async function devolverFerramenta() {
+        const mecanico = document
+          .getElementById("siglaMecanicoDev")
+          .value.toUpperCase()
+          .trim();
+        const supervisor = document
+          .getElementById("siglaSupervisorDev")
+          .value.toUpperCase()
+          .trim();
+        const ferramenta = document
+          .getElementById("codigoDevolucao")
+          .value.toUpperCase()
+          .trim();
+        const msgBox = document.getElementById("msgDevolucao");
 
-            if (!mecanico || !supervisor || !ferramenta) {
-                mostrarMensagem(msgBox, "erro", "❌ Preencha todos os campos!");
-                return;
-            }
-
-            try {
-                const resposta = await fetch('http://localhost:3333/devolver', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        codigo_ferramenta: ferramenta,
-                        sigla_mecanico: mecanico,
-                        sigla_supervisor: supervisor
-                    })
-                });
-
-                const dados = await resposta.json();
-
-                if (resposta.status === 200) {
-                    mostrarMensagem(msgBox, "sucesso", "✅ " + dados.mensagem);
-                    document.getElementById('siglaMecanicoDev').value = "";
-                    document.getElementById('siglaSupervisorDev').value = "";
-                    document.getElementById('codigoDevolucao').value = "";
-                    carregarDisponiveis(); 
-                } else {
-                    mostrarMensagem(msgBox, "erro", "❌ " + dados.erro);
-                }
-            } catch (error) {
-                mostrarMensagem(msgBox, "erro", "❌ Erro de conexão com o servidor.");
-            }
+        if (!mecanico || !supervisor || !ferramenta) {
+          mostrarMensagem(msgBox, "erro", "❌ Preencha todos os campos!");
+          return;
         }
 
-        function mostrarMensagem(elemento, tipo, texto) {
-            elemento.className = `msg ${tipo}`;
-            elemento.innerHTML = texto;
-            setTimeout(() => { elemento.className = "msg"; }, 4000); 
-        }
+        try {
+          const resposta = await fetch("http://localhost:3333/devolver", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              codigo_ferramenta: ferramenta,
+              sigla_mecanico: mecanico,
+              sigla_supervisor: supervisor,
+            }),
+          });
 
-        window.onload = carregarDisponiveis;
+          const dados = await resposta.json();
+
+          if (resposta.status === 200) {
+            mostrarMensagem(msgBox, "sucesso", "✅ " + dados.mensagem);
+            document.getElementById("siglaMecanicoDev").value = "";
+            document.getElementById("siglaSupervisorDev").value = "";
+            document.getElementById("codigoDevolucao").value = "";
+            carregarDisponiveis();
+          } else {
+            mostrarMensagem(msgBox, "erro", "❌ " + dados.erro);
+          }
+        } catch (error) {
+          mostrarMensagem(msgBox, "erro", "❌ Erro de conexão com o servidor.");
+        }
+      }
+
+      function mostrarMensagem(elemento, tipo, texto) {
+        elemento.className = `msg ${tipo}`;
+        elemento.innerHTML = texto;
+        setTimeout(() => {
+          elemento.className = "msg";
+        }, 4000);
+      }
+
+      window.onload = carregarDisponiveis;
     </script>
-</body>
+  </body>
 </html>
