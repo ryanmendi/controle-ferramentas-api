@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oficina - Painel de Controle</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        /* ================= RESET E VARIÁVEIS ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --bg-sidebar: #0f172a; 
+            --bg-sidebar-hover: #1e293b;
+            --cor-primaria: #3b82f6; 
+            --cor-fundo: #f1f5f9;
+            --cor-texto-escuro: #334155;
+            --cor-verde: #10b981;
+            --cor-vermelho: #ef4444;
+            --cor-cinza: #64748b;
+        }
+
+        body { display: flex; height: 100vh; background-color: var(--cor-fundo); overflow: hidden; }
+        
+        /* ================= BARRA LATERAL (AGORA RETRÁTIL) ================= */
+        .sidebar { width: 280px; background-color: var(--bg-sidebar); color: white; display: flex; flex-direction: column; transition: width 0.3s ease; }
+        
+        /* Classe que encolhe a barra lateral */
+        .sidebar.collapsed { width: 80px; }
+        
+        .sidebar-header { padding: 25px 20px; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-area i { font-size: 28px; color: var(--cor-primaria); }
+        
+        /* Botão de Toggle (Hamburger) */
+        .btn-toggle { cursor: pointer; font-size: 24px; color: #cbd5e1; transition: 0.2s; }
+        .btn-toggle:hover { color: white; }
+
+        /* Escondendo textos e logo quando recolhido */
+        .sidebar.collapsed .logo-text, 
+        .sidebar.collapsed .logo-area i { display: none; }
+        .sidebar.collapsed .sidebar-header { justify-content: center; padding: 25px 0; }
+        .sidebar.collapsed .menu-text { display: none; }
+
+        .sidebar-menu { display: flex; flex-direction: column; padding: 20px 0; flex: 1; overflow-y: auto; }
+        
+        .menu-item { padding: 15px 25px; color: #cbd5e1; text-decoration: none; font-size: 15px; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+        .menu-item i { font-size: 22px; min-width: 22px; } 
+        .menu-item:hover, .menu-item.active { background-color: var(--bg-sidebar-hover); color: white; border-left-color: var(--cor-primaria); }
+        
+        /* Ajuste do item quando recolhido */
+        .sidebar.collapsed .menu-item { padding: 15px 0; justify-content: center; border-left: none; }
+        .sidebar.collapsed .menu-item:hover, .sidebar.collapsed .menu-item.active { border-left: none; background-color: var(--cor-primaria); }
+
+        .menu-item.link-tablet { margin-top: auto; border-top: 1px solid #1e293b; color: var(--cor-primaria); font-weight: bold; }
+        .menu-item.link-tablet:hover { background-color: #1e293b; color: white; }
+
+        .menu-divider { height: 1px; background-color: #1e293b; margin: 10px 20px; }
+        .sidebar.collapsed .menu-divider { margin: 10px; }
+
+        /* ================= ÁREA PRINCIPAL ================= */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .section { display: none; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h2 { color: var(--cor-texto-escuro); margin-bottom: 25px; font-size: 26px; display: flex; align-items: center; gap: 10px; }
+
+        /* ================= CARDS E TABELAS ================= */
+        .cards-container { display: flex; gap: 20px; margin-bottom: 30px; }
+        .card { flex: 1; background-color: var(--cor-primaria); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card h3 { font-size: 15px; font-weight: normal; margin-bottom: 10px; opacity: 0.9; display: flex; align-items: center; gap: 8px;}
+        .card .valor { font-size: 32px; font-weight: bold; }
+
+        .tables-container { display: flex; gap: 20px; }
+        .table-box { flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .table-box h3 { color: var(--cor-texto-escuro); margin-bottom: 15px; border-bottom: 2px solid var(--cor-fundo); padding-bottom: 10px; display: flex; align-items: center; gap: 8px;}
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { color: #64748b; font-weight: 600; background-color: #f8fafc; }
+        tr:hover { background-color: #f1f5f9; }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
+        .badge.verde { background-color: var(--cor-verde); }
+        .badge.vermelho { background-color: var(--cor-vermelho); }
+        .badge.cinza { background-color: var(--cor-cinza); }
+
+        /* ================= FORMULÁRIOS ================= */
+        .form-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 500px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 14px; font-weight: 600; color: var(--cor-texto-escuro); margin-bottom: 8px; }
+        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; text-transform: uppercase; }
+        input:focus { outline: none; border-color: var(--cor-primaria); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        button { background-color: var(--cor-primaria); color: white; border: none; padding: 14px 20px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
+        button:hover { background-color: #2563eb; }
+        
+        .msg { padding: 15px; border-radius: 6px; margin-top: 15px; font-weight: bold; display: none; }
+        .msg.sucesso { background-color: #d1fae5; color: #065f46; display: block; }
+        .msg.erro { background-color: #fee2e2; color: #991b1b; display: block; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-area">
+                <i class="ph ph-wrench"></i>
+                <span class="logo-text">Oficina Pro</span>
+            </div>
+            <i class="ph ph-list btn-toggle" onclick="toggleSidebar()" title="Recolher/Expandir Menu"></i>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-item active" onclick="mudarAba('dashboard', this)" title="Home">
+                <i class="ph ph-squares-four"></i> <span class="menu-text">Home (Resumo)</span>
+            </div>
+            
+            <div class="menu-divider"></div>
+            
+            <div class="menu-item" onclick="mudarAba('view-disponiveis', this)" title="Disponíveis">
+                <i class="ph ph-check-circle"></i> <span class="menu-text">Disponíveis</span>
+            </div>
+            <div class="menu-item" onclick="mudarAba('view-em-uso', this)" title="Em Uso">
+                <i class="ph ph-warning-circle"></i> <span class="menu-text">Em Uso</span>
+            </div>
+            <div class="menu-item" onclick="mudarAba('view-historico', this)" title="Histórico">
+                <i class="ph ph-clock-counter-clockwise"></i> <span class="menu-text">Histórico</span>
+            </div>
+            
+            <div class="menu-divider"></div>
+
+            <div class="menu-item" onclick="mudarAba('add-ferramenta', this)" title="Nova Ferramenta">
+                <i class="ph ph-plus-circle"></i> <span class="menu-text">Nova Ferramenta</span>
+            </div>
+            <div class="menu-item" onclick="mudarAba('add-mecanico', this)" title="Novo Mecânico">
+                <i class="ph ph-user-plus"></i> <span class="menu-text">Novo Mecânico</span>
+            </div>
+            <div class="menu-item" onclick="mudarAba('add-supervisor', this)" title="Novo Supervisor">
+                <i class="ph ph-user-gear"></i> <span class="menu-text">Novo Supervisor</span>
+            </div>
+            
+            <a href="index.html" class="menu-item link-tablet" title="Tela do Tablet">
+                <i class="ph ph-device-tablet-camera"></i> <span class="menu-text">Tela do Tablet</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        
+        <section id="dashboard" class="section active">
+            <h2><i class="ph ph-chart-bar"></i> Visão Geral da Oficina</h2>
+            <div class="cards-container">
+                <div class="card">
+                    <h3><i class="ph ph-wrench"></i> Total Cadastradas</h3>
+                    <div class="valor" id="cardTotal">0</div>
+                </div>
+                <div class="card" style="background-color: var(--cor-verde);">
+                    <h3><i class="ph ph-check-circle"></i> Prontas para Uso</h3>
+                    <div class="valor" id="cardDisponiveis">0</div>
+                </div>
+                <div class="card" style="background-color: var(--cor-vermelho);">
+                    <h3><i class="ph ph-warning-circle"></i> Sendo Utilizadas</h3>
+                    <div class="valor" id="cardEmUso">0</div>
+                </div>
+            </div>
+
+            <div class="tables-container">
+                <div class="table-box">
+                    <h3>Resumo: Disponíveis</h3>
+                    <table>
+                        <thead><tr><th>Cód</th><th>Nome</th><th>Status</th></tr></thead>
+                        <tbody id="tbHomeDisponiveis"></tbody>
+                    </table>
+                </div>
+                <div class="table-box">
+                    <h3>Resumo: Em Uso</h3>
+                    <table>
+                        <thead><tr><th>Cód</th><th>Nome</th><th>Sigla Resp.</th></tr></thead>
+                        <tbody id="tbHomeEmUso"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-disponiveis" class="section">
+            <h2><i class="ph ph-check-circle" style="color: var(--cor-verde);"></i> Catálogo de Ferramentas Disponíveis</h2>
+            <div class="table-box">
+                <table>
+                    <thead><tr><th>Código</th><th>Nome da Ferramenta</th><th>Status no Sistema</th></tr></thead>
+                    <tbody id="tbDetalheDisponiveis"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="view-em-uso" class="section">
+            <h2><i class="ph ph-warning-circle" style="color: var(--cor-vermelho);"></i> Ferramentas Atualmente em Uso</h2>
+            <div class="table-box">
+                <table>
+                    <thead><tr><th>Código</th><th>Ferramenta</th><th>Mecânico (Pegou)</th><th>Supervisor (Liberou)</th><th>Data/Hora da Retirada</th></tr></thead>
+                    <tbody id="tbDetalheEmUso"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="view-historico" class="section">
+            <h2><i class="ph ph-clock-counter-clockwise"></i> Histórico de Empréstimos e Devoluções</h2>
+<div class="table-box" style="overflow-x: auto;">
+                <table style="min-width: 800px;">
+    <thead>
+        <tr>
+            <th>Ferramenta</th>
+            <th>Retirada</th>
+            <th>Retirado por</th>
+            <th>Devolução</th>
+            <th>Devolvido por</th>
+        </tr>
+    </thead>
+                    <tbody id="tbHistorico"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="add-ferramenta" class="section">
+            <h2><i class="ph ph-plus-circle"></i> Adicionar Nova Ferramenta</h2>
+            <div class="form-box">
+                <div class="form-group"><label>Nome da Ferramenta:</label><input type="text" id="novaFerrNome" placeholder="Ex: Chave de Fenda"></div>
+                <div class="form-group"><label>Código de Identificação:</label><input type="text" id="novaFerrCodigo" placeholder="Ex: CHV-001"></div>
+                <button onclick="salvarFerramenta()">Cadastrar Ferramenta</button>
+                <div id="msgFerramenta" class="msg"></div>
+            </div>
+        </section>
+
+        <section id="add-mecanico" class="section">
+            <h2><i class="ph ph-user-plus"></i> Adicionar Novo Mecânico</h2>
+            <div class="form-box">
+                <div class="form-group"><label>Nome Completo:</label><input type="text" id="novoMecNome" placeholder="Ex: Roberto Alves"></div>
+                <div class="form-group"><label>Sigla de Acesso (3 letras):</label><input type="text" id="novoMecSigla" placeholder="Ex: ROB" maxlength="5"></div>
+                <button onclick="salvarUsuario('novoMecNome', 'novoMecSigla', 'msgMecanico')">Cadastrar Mecânico</button>
+                <div id="msgMecanico" class="msg"></div>
+            </div>
+        </section>
+
+        <section id="add-supervisor" class="section">
+            <h2><i class="ph ph-user-gear"></i> Adicionar Novo Supervisor</h2>
+            <div class="form-box">
+                <div class="form-group"><label>Nome Completo do Supervisor:</label><input type="text" id="novoSupNome" placeholder="Ex: Carlos Silva"></div>
+                <div class="form-group"><label>Sigla de Acesso (Autorização):</label><input type="text" id="novoSupSigla" placeholder="Ex: SUP" maxlength="5"></div>
+                <button onclick="salvarUsuario('novoSupNome', 'novoSupSigla', 'msgSupervisor')" style="background-color: var(--cor-texto-escuro);">Cadastrar Supervisor</button>
+                <div id="msgSupervisor" class="msg"></div>
+            </div>
+        </section>
+
+    </main>
+
+<script>
+        // Função para recolher/expandir a barra lateral
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // Navegação entre abas
+        function mudarAba(idAba, elementoMenu) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(idAba).classList.add('active');
+            elementoMenu.classList.add('active');
+            carregarDados();
+        }
+
+        // Função Master de Carregamento (Agora com tudo dentro e blindado!)
+        async function carregarDados() {
+            try {
+                // 1. Busca os dados no Back-end
+                const resFerramentas = await fetch('http://localhost:3333/ferramentas');
+                const ferramentas = await resFerramentas.json();
+
+                const resHistorico = await fetch('http://localhost:3333/historico');
+                const historico = await resHistorico.json();
+
+                // Variáveis de contagem e HTML
+                let qtdDisp = 0, qtdUso = 0;
+                let htmlHomeDisp = '', htmlHomeUso = '';
+                let htmlDetDisp = '', htmlDetUso = '';
+
+                // 2. Monta as Ferramentas (Disponíveis e Em Uso)
+                ferramentas.forEach(f => {
+                    if (f.status === 'DISPONIVEL') {
+                        qtdDisp++;
+                        htmlHomeDisp += `<tr><td><strong>${f.codigo_identificacao}</strong></td><td>${f.nome}</td><td><span class="badge verde"><i class="ph ph-check"></i> Livre</span></td></tr>`;
+                        htmlDetDisp += `<tr><td><strong>${f.codigo_identificacao}</strong></td><td>${f.nome}</td><td><span class="badge verde">Pronta para Uso</span></td></tr>`;
+                    } else {
+                        qtdUso++;
+                        
+                        // PROTEÇÃO: Verifica se a ficha realmente existe antes de tentar ler
+                        const ficha = f.movimentacoes && f.movimentacoes.length > 0 ? f.movimentacoes[0] : null; 
+
+                        if (ficha) {
+                            const dataRetirada = new Date(ficha.data_retirada).toLocaleString('pt-BR');
+                            const mecSigla = ficha.mecanico ? ficha.mecanico.sigla : 'N/A';
+                            const supSigla = ficha.responsavel_liberacao ? ficha.responsavel_liberacao.sigla : 'N/A';
+                            const mecNome = ficha.mecanico ? ficha.mecanico.nome : 'N/A';
+                            const supNome = ficha.responsavel_liberacao ? ficha.responsavel_liberacao.nome : '';
+
+                            htmlHomeUso += `<tr><td><strong>${f.codigo_identificacao}</strong></td><td>${f.nome}</td><td><strong>${mecSigla}</strong></td></tr>`;
+                            htmlDetUso += `<tr><td><strong>${f.codigo_identificacao}</strong></td><td>${f.nome}</td><td><strong style="color: var(--cor-primaria);">${mecSigla}</strong> - ${mecNome}</td><td><strong>${supSigla}</strong> - ${supNome}</td><td><i class="ph ph-calendar-blank"></i> ${dataRetirada}</td></tr>`;
+                        } else {
+                            htmlHomeUso += `<tr><td><strong>${f.codigo_identificacao}</strong></td><td>${f.nome}</td><td><span style="color:red">Erro de Ficha</span></td></tr>`;
+                            htmlDetUso += `<tr><td><strong>${f.codigo_identificacao}</strong></td><td>${f.nome}</td><td colspan="3" style="color: red;">Atenção: Status EM_USO sem movimentação aberta.</td></tr>`;
+                        }
+                    }
+                });
+
+// 3. Monta o Histórico
+                let htmlHistorico = '';
+                
+                if (Array.isArray(historico)) {
+                    historico.forEach(h => {
+                        const dtRetirada = new Date(h.data_retirada).toLocaleString('pt-BR');
+                        const dtDevolucao = new Date(h.data_devolucao).toLocaleString('pt-BR');
+                        
+                        // 1. DADOS DE QUEM RETIROU
+                        const quemRetirou = h.mecanico;
+                        const nomeRetirou = quemRetirou ? quemRetirou.nome : 'Sem Registo';
+                        const siglaRetirou = quemRetirou ? quemRetirou.sigla : '-';
+
+                        // 2. DADOS DE QUEM DEVOLVEU
+                        // Se não tiver quem devolveu (registros antigos), repete quem retirou para não ficar em branco
+                        const quemDevolveu = h.mecanico_devolucao; 
+                        const nomeDevolveu = quemDevolveu ? quemDevolveu.nome : nomeRetirou;
+                        const siglaDevolveu = quemDevolveu ? quemDevolveu.sigla : siglaRetirou;
+
+                        htmlHistorico += `
+                            <tr>
+                                <td>
+                                    <div style="font-weight: bold; color: var(--cor-texto-escuro);">${h.ferramenta.codigo_identificacao}</div>
+                                    <div style="font-size: 13px; color: var(--cor-cinza);">${h.ferramenta.nome}</div>
+                                </td>
+                                
+                                <td><i class="ph ph-calendar-blank" style="color: var(--cor-primaria);"></i> ${dtRetirada}</td>
+                                
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="badge verde" style="background-color: var(--cor-primaria); font-size: 14px; min-width: 50px; text-align: center;">${siglaRetirou}</span>
+                                        <span style="font-weight: 600; color: var(--cor-texto-escuro);">${nomeRetirou}</span>
+                                    </div>
+                                </td>
+                                
+                                <td><i class="ph ph-clock-counter-clockwise" style="color: var(--cor-verde);"></i> ${dtDevolucao}</td>
+                                
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="badge verde" style="background-color: var(--cor-cinza); font-size: 14px; min-width: 50px; text-align: center;">${siglaDevolveu}</span>
+                                        <span style="font-weight: 600; color: var(--cor-texto-escuro);">${nomeDevolveu}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    htmlHistorico = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: red;'>Falha ao ler o histórico.</td></tr>";
+                }
+                
+                // 4. Injeta os dados nas tags HTML corretas!
+                document.getElementById('cardTotal').innerText = ferramentas.length;
+                document.getElementById('cardDisponiveis').innerText = qtdDisp;
+                document.getElementById('cardEmUso').innerText = qtdUso;
+
+                document.getElementById('tbHomeDisponiveis').innerHTML = htmlHomeDisp || "<tr><td colspan='3'>Nenhuma disponível.</td></tr>";
+                document.getElementById('tbHomeEmUso').innerHTML = htmlHomeUso || "<tr><td colspan='3'>Nenhuma em uso.</td></tr>";
+                document.getElementById('tbDetalheDisponiveis').innerHTML = htmlDetDisp || "<tr><td colspan='3'>Nenhuma ferramenta disponível.</td></tr>";
+                document.getElementById('tbDetalheEmUso').innerHTML = htmlDetUso || "<tr><td colspan='5' style='text-align:center;'>Nenhuma ferramenta está emprestada no momento.</td></tr>";
+                document.getElementById('tbHistorico').innerHTML = htmlHistorico || "<tr><td colspan='4' style='text-align:center; padding: 20px;'>Nenhum histórico encontrado.</td></tr>";
+
+            } catch (error) { 
+                console.error("Erro ao carregar dados:", error); 
+            }
+        }
+
+        // Formulário: Salvar Ferramenta
+        async function salvarFerramenta() {
+            const nome = document.getElementById('novaFerrNome').value.trim();
+            const codigo = document.getElementById('novaFerrCodigo').value.toUpperCase().trim();
+            const msgBox = document.getElementById('msgFerramenta');
+
+            if (!nome || !codigo) { mostrarMensagem(msgBox, "erro", "Preencha todos os campos!"); return; }
+
+            try {
+                const res = await fetch('http://localhost:3333/ferramentas', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, codigo_identificacao: codigo })
+                });
+                if (res.status === 201) {
+                    mostrarMensagem(msgBox, "sucesso", "✅ Ferramenta cadastrada!");
+                    document.getElementById('novaFerrNome').value = ""; document.getElementById('novaFerrCodigo').value = "";
+                    carregarDados(); // Atualiza a tela na hora!
+                } else {
+                    const dados = await res.json(); mostrarMensagem(msgBox, "erro", "❌ " + dados.erro);
+                }
+            } catch (error) { mostrarMensagem(msgBox, "erro", "Erro de conexão."); }
+        }
+
+        // Formulário: Salvar Mecânico/Supervisor
+        async function salvarUsuario(idNome, idSigla, idMensagem) {
+            const nome = document.getElementById(idNome).value.trim();
+            const sigla = document.getElementById(idSigla).value.toUpperCase().trim();
+            const msgBox = document.getElementById(idMensagem);
+
+            if (!nome || !sigla) { mostrarMensagem(msgBox, "erro", "Preencha todos os campos!"); return; }
+
+            try {
+                const res = await fetch('http://localhost:3333/usuarios', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, sigla })
+                });
+                
+                if (res.status === 201) {
+                    mostrarMensagem(msgBox, "sucesso", "✅ Cadastro realizado com sucesso!");
+                    document.getElementById(idNome).value = ""; document.getElementById(idSigla).value = "";
+                } else {
+                    const dados = await res.json(); mostrarMensagem(msgBox, "erro", "❌ " + dados.erro);
+                }
+            } catch (error) { mostrarMensagem(msgBox, "erro", "Erro de conexão."); }
+        }
+
+        // Mensagens animadas
+        function mostrarMensagem(elemento, tipo, texto) {
+            elemento.className = `msg ${tipo}`; 
+            elemento.innerText = texto;
+            setTimeout(() => { elemento.className = "msg"; }, 4000); 
+        }
+
+        // Faz o carregamento rodar sozinho quando a página abre
+        window.onload = carregarDados;
+    </script>
+</body>
+</html>

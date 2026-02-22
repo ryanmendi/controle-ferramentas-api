@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Nossos Enums (Opções fixas)
+enum Role {
+  MECANICO
+  RESPONSAVEL
+  ADMIN
+}
+
+enum StatusFerramenta {
+  DISPONIVEL
+  EM_USO
+  EM_MANUTENCAO
+}
+
+// Nossas Tabelas
+model Usuario {
+  id        String  @id @default(uuid())
+  nome      String
+  sigla     String  @unique
+  papel     Role    @default(MECANICO)
+  ativo     Boolean @default(true)
+
+  // Relações antigas (Quem retira)
+  movimentacoesMecanico    Movimentacao[] @relation("MecanicoRelation")
+  movimentacoesResponsavel Movimentacao[] @relation("ResponsavelRelation")
+  
+  // NOVAS RELAÇÕES: Quem devolve e quem recebe
+  movimentacoesDevolucao   Movimentacao[] @relation("DevolucaoMecanicoRelation")
+  movimentacoesRecebimento Movimentacao[] @relation("RecebimentoResponsavelRelation")
+
+  @@map("usuarios")
+}
+
+model Ferramenta {
+  id                   String           @id @default(uuid())
+  nome                 String
+  codigo_identificacao String           @unique
+  status               StatusFerramenta @default(DISPONIVEL)
+
+  movimentacoes        Movimentacao[]
+
+  @@map("ferramentas")
+}
+
+model Movimentacao {
+  id                       String    @id @default(uuid())
+  data_retirada            DateTime  @default(now())
+  data_devolucao           DateTime?
+  observacao               String?
+
+  ferramenta_id            String
+  ferramenta               Ferramenta @relation(fields: [ferramenta_id], references: [id])
+
+  mecanico_id              String
+  mecanico                 Usuario    @relation("MecanicoRelation", fields: [mecanico_id], references: [id])
+
+  responsavel_liberacao_id String
+  responsavel_liberacao    Usuario    @relation("ResponsavelRelation", fields: [responsavel_liberacao_id], references: [id])
+
+  // NOVOS CAMPOS: Podem estar vazios (?) porque na retirada ainda não houve devolução
+  mecanico_devolucao_id      String?
+  mecanico_devolucao         Usuario? @relation("DevolucaoMecanicoRelation", fields: [mecanico_devolucao_id], references: [id])
+
+  responsavel_recebimento_id String?
+  responsavel_recebimento    Usuario? @relation("RecebimentoResponsavelRelation", fields: [responsavel_recebimento_id], references: [id])
+
+  @@map("movimentacoes")
+}

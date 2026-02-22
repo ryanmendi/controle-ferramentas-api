@@ -1,0 +1,51 @@
+### 1. Testar se a API está online (Abre no navegador)
+GET http://localhost:3333/
+
+### 2. Cadastrar o Mecânico Alex (Envia dados pro banco)
+POST http://localhost:3333/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Alex",
+  "sigla": "AXA"
+}
+
+### 3. Cadastrar uma Ferramenta
+POST http://localhost:3333/ferramentas
+Content-Type: application/json
+
+{
+  "nome": "Furadeira de Impacto Makita",
+  "codigo_identificacao": "FUR-001"
+}
+
+### 4. Listar todas as ferramentas
+GET http://localhost:3333/ferramentas
+
+### 5. Cadastrar o Supervisor Carlos
+POST http://localhost:3333/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Carlos Silva",
+  "sigla": "SUP",
+  "papel": "RESPONSAVEL"
+}
+
+### 6. Emprestar a Ferramenta na prática!
+POST http://localhost:3333/emprestar
+Content-Type: application/json
+
+{
+  "sigla_mecanico": "AXA",
+  "sigla_responsavel": "SUP",
+  "codigo_ferramenta": "FUR-001"
+}
+
+### 7. Devolver a Ferramenta ao painel
+POST http://localhost:3333/devolver
+Content-Type: application/json
+
+{
+  "codigo_ferramenta": "FUR-001"
+}
