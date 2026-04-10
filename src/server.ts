@@ -38,8 +38,9 @@ app.post("/usuarios", async (req: Request, res: Response) => {
 });
 
 // Ligando o servidor na porta 3333
-app.listen(3333, () => {
-  console.log("Servidor rodando no endereço: http://localhost:3333");
+const port = process.env.PORT || 3000;
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on port ${port}`);
 });
 
 // ==========================================
