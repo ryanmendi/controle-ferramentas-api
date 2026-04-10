@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { type Request, type Response } from 'express';
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 
@@ -37,10 +37,11 @@ app.post("/usuarios", async (req: Request, res: Response) => {
   }
 });
 
-// Ligando o servidor na porta 3333
-const port = process.env.PORT || 3000;
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running on port ${port}`);
+// Ligando o servidor na porta do Railway (ou na 3000 se estiver rodando localmente)
+const PORT = Number(process.env.PORT) || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(` Server running on port ${PORT}`);
 });
 
 // ==========================================
