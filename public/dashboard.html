@@ -593,6 +593,9 @@
     </main>
 
     <script>
+        // URL base do Back-end (ajuste para produção ou localhost conforme necessário)
+        const API_URL = 'controle-ferramentas-api-production.up.railway.app';
+
         // Função para recolher/expandir a barra lateral
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -613,10 +616,10 @@
         async function carregarDados() {
             try {
                 // 1. Busca os dados no Back-end
-                const resFerramentas = await fetch('http://localhost:3333/ferramentas');
+                const resFerramentas = await fetch(`${API_URL}/ferramentas`);
                 const ferramentas = await resFerramentas.json();
 
-                const resHistorico = await fetch('http://localhost:3333/historico');
+                const resHistorico = await fetch(`${API_URL}/historico`);
                 const historico = await resHistorico.json();
 
                 // Variáveis de contagem e HTML
@@ -624,7 +627,7 @@
                 let htmlHomeDisp = '', htmlHomeUso = '';
                 let htmlDetDisp = '', htmlDetUso = '';
 
-                // 2. Monta as Ferramentas (Disponíveis e Em Uso)
+                // Monta as Ferramentas (Disponíveis e Em Uso)
                 ferramentas.forEach(f => {
                     if (f.status === 'DISPONIVEL') {
                         qtdDisp++;
@@ -633,7 +636,7 @@
                     } else {
                         qtdUso++;
 
-                        // PROTEÇÃO: Verifica se a ficha realmente existe antes de tentar ler
+                         // verifica se a ficha realmente existe antes de tentar ler
                         const ficha = f.movimentacoes && f.movimentacoes.length > 0 ? f.movimentacoes[0] : null;
 
                         if (ficha) {
@@ -652,7 +655,7 @@
                     }
                 });
 
-                // 3. Monta o Histórico
+                // Monta o Histórico
                 let htmlHistorico = '';
 
                 if (Array.isArray(historico)) {
@@ -660,12 +663,12 @@
                         const dtRetirada = new Date(h.data_retirada).toLocaleString('pt-BR');
                         const dtDevolucao = new Date(h.data_devolucao).toLocaleString('pt-BR');
 
-                        // 1. DADOS DE QUEM RETIROU
+                        //  DADOS DE QUEM RETIROU
                         const quemRetirou = h.mecanico;
                         const nomeRetirou = quemRetirou ? quemRetirou.nome : 'Sem Registo';
                         const siglaRetirou = quemRetirou ? quemRetirou.sigla : '-';
 
-                        // 2. DADOS DE QUEM DEVOLVEU
+                        //  DADOS DE QUEM DEVOLVEU
                         // Se não tiver quem devolveu (registros antigos), repete quem retirou para não ficar em branco
                         const quemDevolveu = h.mecanico_devolucao;
                         const nomeDevolveu = quemDevolveu ? quemDevolveu.nome : nomeRetirou;
@@ -702,7 +705,7 @@
                     htmlHistorico = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: red;'>Falha ao ler o histórico.</td></tr>";
                 }
 
-                // 4. Injeta os dados nas tags HTML corretas!
+                //  Injeta os dados nas tags HTML corretas
                 document.getElementById('cardTotal').innerText = ferramentas.length;
                 document.getElementById('cardDisponiveis').innerText = qtdDisp;
                 document.getElementById('cardEmUso').innerText = qtdUso;
@@ -727,7 +730,7 @@
             if (!nome || !codigo) { mostrarMensagem(msgBox, "erro", "Preencha todos os campos!"); return; }
 
             try {
-                const res = await fetch('http://localhost:3333/ferramentas', {
+                const res = await fetch(`${API_URL}/ferramentas`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome, codigo_identificacao: codigo })
                 });
@@ -750,7 +753,7 @@
             if (!nome || !sigla) { mostrarMensagem(msgBox, "erro", "Preencha todos os campos!"); return; }
 
             try {
-                const res = await fetch('http://localhost:3333/usuarios', {
+                const res = await fetch(`${API_URL}/usuarios`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome, sigla })
                 });
@@ -769,7 +772,7 @@
         async function carregarColaboradores() {
             try {
                 // script para puxar dados dos colaboradores do back-end
-                const res = await fetch('http://localhost:3333/usuarios');
+                const res = await fetch(`${API_URL}/usuarios`);
                 const colaboradores = await res.json();
 
                 // script para identificar onde a tabela será desenhada

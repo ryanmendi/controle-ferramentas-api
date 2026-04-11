@@ -434,6 +434,9 @@
     </main>
 
     <script>
+
+      const API_URL = "controle-ferramentas-api-production.up.railway.app"; // URL base da sua API
+
       // Função para recolher/expandir a barra lateral
       function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
@@ -459,7 +462,7 @@
       // Busca na API APENAS as ferramentas livres para preencher a tabela lateral
       async function carregarDisponiveis() {
         try {
-          const resposta = await fetch("http://localhost:3333/ferramentas");
+          const resposta = await fetch(`${API_URL}/ferramentas`);
           const ferramentas = await resposta.json();
 
           let html = "";
@@ -506,7 +509,7 @@
         }
 
         try {
-          const res = await fetch("http://localhost:3333/emprestar", {
+          const res = await fetch(`${API_URL}/emprestar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -516,7 +519,7 @@
             }),
           });
 
-          const dados = await res.json(); // Agora lê a resposta exata do seu Prisma
+          const dados = await res.json(); // Agora lê a resposta JSON corretamente
 
           if (res.ok) {
             mostrarMensagem(msgBox, "sucesso", dados.mensagem); // "Sucesso! Ferramenta liberada."
@@ -526,7 +529,7 @@
             if (typeof carregarDisponiveis === "function")
               carregarDisponiveis();
           } else {
-            mostrarMensagem(msgBox, "erro", dados.erro); // Exibe o erro exato programado no seu Back-end!
+            mostrarMensagem(msgBox, "erro", dados.erro); // Exibe o erro exato programado 
           }
         } catch (error) {
           mostrarMensagem(msgBox, "erro", "Erro de conexão com o servidor.");
@@ -554,7 +557,7 @@
         }
 
         try {
-          const resposta = await fetch("http://localhost:3333/devolver", {
+          const resposta = await fetch(`${API_URL}/devolver`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
